@@ -1,7 +1,7 @@
 import { update, currentOwner } from './vdom'
 import { options, extend } from './utils'
 import { Vnode } from './createElement'
-import { catchError } from './ErrorBoundary';
+import { catchError } from './errorBoundary';
 
 export const Com = {
   CREATE: 0,//创造节点
