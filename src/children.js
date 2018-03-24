@@ -38,7 +38,7 @@ const Children = {
     },
 
     // 子组件转换成数组，常用于排序前
-    toArray: function (childVnode) {
+    toArray(childVnode) {
         if (childVnode == null) {
             return [];
         }

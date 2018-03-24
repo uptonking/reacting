@@ -34,7 +34,9 @@ function createPortal(child, container) {
     return CreatePortalVnode;
 }
 
+
 let mountIndex = 0;
+
 var containerMap = {};
 
 var currentOwner = {
@@ -163,7 +165,7 @@ function updateComponent(oldComponentVnode, newComponentVnode, parentContext, pa
 /**
  * 更新真实dom
  */
-function update(oldVnode, newVnode, parentDomNode: Element, parentContext) {
+function update(oldVnode, newVnode, parentDomNode, parentContext) {
     newVnode._hostNode = oldVnode._hostNode;
     if (oldVnode.type === newVnode.type) {
         if (typeNumber(oldVnode) === 7) {
@@ -295,34 +297,59 @@ function updateChild(oldChild, newChild, parentDomNode, parentContext) {
         } else if (newEndVnode === undefined || newEndVnode === null) {
             newEndVnode = newChild[--newEndIndex];
         }
+
+        /// 如果旧头索引节点和新头索引节点相同，
         else if (isSameVnode(oldStartVnode, newStartVnode)) {
+            //对旧头索引节点和新头索引节点进行diff更新， 从而达到复用节点效果
             update(oldStartVnode, newStartVnode, newStartVnode._hostNode, parentContext);
+            //旧头索引向后
             oldStartVnode = oldChild[++oldStartIndex];
+            //新头索引向后
             newStartVnode = newChild[++newStartIndex]
         }
+
+        /// 如果旧尾索引节点和新尾索引节点相似，可以复用
         else if (isSameVnode(oldEndVnode, newEndVnode)) {
+            //旧尾索引节点和新尾索引节点进行更新
             update(oldEndVnode, newEndVnode, newEndVnode._hostNode, parentContext);
+            //旧尾索引向前
             oldEndVnode = oldChild[--oldEndIndex];
+            //新尾索引向前
             newEndVnode = newChild[--newEndIndex]
         }
+
+        //如果旧头索引节点和新尾索引节点相似，可以通过移动来复用
+        //如旧节点为【5,1,2,3,4】，新节点为【1,2,3,4,5】，如果缺乏这种判断，意味着
+        //那样需要先将5->1,1->2,2->3,3->4,4->5五次删除插入操作，即使是有了key-index来复用，
+        // 也会出现【5,1,2,3,4】->【1,5,2,3,4】->【1,2,5,3,4】->【1,2,3,5,4】->【1,2,3,4,5】
+        // 共4次操作，如果有了这种判断，我们只需要将5插入到最后一次操作即可
         else if (isSameVnode(oldStartVnode, newEndVnode)) {
             let dom = oldStartVnode._hostNode;
             parentDomNode.insertBefore(dom, oldEndVnode.nextSibling);
             update(oldStartVnode, newEndVnode, oldStartVnode._hostNode._hostNode, parentContext);
             oldStartVnode = oldChild[++oldStartIndex];
             newEndVnode = newChild[--newEndIndex]
-        } else if (isSameVnode(oldEndVnode, newStartVnode)) {
+        }
+
+        /// 如果旧尾索引和新头索引相同
+        else if (isSameVnode(oldEndVnode, newStartVnode)) {
             let dom = oldEndVnode._hostNode;
             parentDomNode.insertBefore(dom, oldStartVnode._hostNode);
             update(oldStartVnode, newEndVnode, oldStartVnode._hostNode, parentContext);
             oldEndVnode = oldChild[--oldEndIndex];
             newStartVnode = newChild[++newStartIndex]
         }
+
+        /// 如果上面的判断都不通过，我们就需要key-index表来达到最大程度复用了
         else {
+
+            //如果不存在旧节点的key-index表，则创建
             if (hascode === undefined) hascode = mapKeyToIndex(oldChild);
 
+            //找到新节点在旧节点组中对应节点的位置
             let indexInOld = hascode[newStartVnode.key];
 
+            //如果新节点在旧节点中不存在，我们将它插入到旧头索引节点前，然后新头索引向后
             if (indexInOld === undefined) {
                 if (newStartVnode.type === '#text') {
                     update(oldStartVnode, newStartVnode, parentDomNode, parentContext);
@@ -339,14 +366,23 @@ function updateChild(oldChild, newChild, parentDomNode, parentContext) {
                 }
 
                 newStartVnode = newChild[++newStartIndex]
+
             } else {
+                //如果新节点在就旧节点组中存在，先找到对应的旧节点
+
                 let moveVnode = oldChild[indexInOld];
+                //先将新节点和对应旧节点作更新
                 update(moveVnode, newStartVnode, moveVnode._hostNode, parentContext);
+                //插入到旧头索引节点之前
                 parentDomNode.insertBefore(moveVnode._hostNode, oldStartVnode._hostNode);
+                //然后将旧节点组中对应节点设置为undefined,代表已经遍历过了，不在遍历，否则可能存在重复插入的问题
                 oldChild[indexInOld] = undefined;
+                //新头索引向后
                 newStartVnode = newChild[++newStartIndex]
             }
         }
+
+        //当旧头索引大于旧尾索引时，代表旧节点组已经遍历完，将剩余的新Vnode添加到最后一个新节点的位置后
         if (oldStartIndex > oldEndIndex) {
 
             for (; newStartIndex - 1 < newEndIndex; newStartIndex++) {
@@ -363,6 +399,8 @@ function updateChild(oldChild, newChild, parentDomNode, parentContext) {
             }
 
         } else if (newStartIndex > newEndIndex) {
+            //如果新节点组先遍历完，那么代表旧节点组中剩余节点都不需要，所以直接删除
+            
             for (; oldStartIndex - 1 < oldEndIndex; oldStartIndex++) {
                 if (oldChild[oldStartIndex]) {
                     let removeNode = oldChild[oldStartIndex];
@@ -464,18 +502,19 @@ function mountComponent(Vnode, parentDomNode, parentContext) {
         // instance.componentDidCatch();
     }
 
-    instance._updateInLifeCycle(); // componentDidMount之后一次性更新
+    // componentDidMount之后一次性更新
+    instance._updateInLifeCycle();
     return domNode
 }
 
-function mountNativeElement(Vnode, parentDomNode: Element, instance) {
+function mountNativeElement(Vnode, parentDomNode, instance) {
     const domNode = renderByLuy(Vnode, parentDomNode, false, {}, instance);
     Vnode._hostNode = domNode;
     Vnode._mountIndex = mountIndexAdd();
     return domNode
 }
 
-function mountTextComponent(Vnode, domNode: Element) {
+function mountTextComponent(Vnode, domNode) {
     let fixText = Vnode.props === 'createPortal' ? '' : Vnode.props;
     let textDomNode = document.createTextNode(fixText);
     domNode.appendChild(textDomNode);
@@ -537,6 +576,7 @@ function findDOMNode(ref) {
  * @param {*} Vnode
  * @param {Element} container
  * @param {boolean} isUpdate
+ * @param parentContext
  * @param {boolean} instance 用于实现refs机制
  */
 // let depth = 0;
@@ -595,7 +635,8 @@ function renderByLuy(Vnode, container, isUpdate, parentContext, instance) {
 
 
 /**
- *  ReactDOM.render()
+ *  ReactDOM.render()的实现
+ *  调用了renderByLuy()
  *
  * @param {Vnode} Vnode Vnode是一颗虚拟DOM树，他的生成方式是babel-transform-react-jsx调用createElement进行的。
  * @param {Element} container 这是一个真实DOM节点，用于插入虚拟DOM。
@@ -606,13 +647,17 @@ function render(Vnode, container) {
     }
 
     const UniqueKey = container.UniqueKey;
-    if (container.UniqueKey) {//已经被渲染
+    if (container.UniqueKey) {
+        ///已经被渲染
+
         const oldVnode = containerMap[UniqueKey];
         const rootVnode = update(oldVnode, Vnode, container);
         runException();
-        return Vnode._instance
+        return Vnode._instance;
+
     } else {
-        //第一次渲染的时候
+        ///第一次渲染的时候
+
         Vnode.isTop = true;
         container.UniqueKey = mountIndexAdd();
         containerMap[container.UniqueKey] = Vnode;
