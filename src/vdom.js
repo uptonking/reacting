@@ -3,7 +3,7 @@ import {flattenChildren, Vnode as VnodeClass} from './createElement'
 import {mapProp, mappingStrategy, updateProps} from './mapProps'
 import {setRef} from './refs'
 import {disposeVnode} from './dispose'
-import {Com} from './component'
+import {CompStatus} from './component'
 import {catchError, collectErrorVnode, getReturn, runException, globalError} from './errorBoundary';
 
 
@@ -97,7 +97,7 @@ function updateComponent(oldComponentVnode, newComponentVnode, parentContext, pa
         oldComponentVnode._instance.context = extend({}, newContext)
     }
 
-    oldComponentVnode._instance.lifeCycle = Com.UPDATING;
+    oldComponentVnode._instance.lifeCycle = CompStatus.UPDATING;
     if (oldComponentVnode._instance.componentWillReceiveProps) {
         catchError(oldComponentVnode._instance, 'componentWillReceiveProps', [newProps, newContext]);
         let mergedState = oldComponentVnode._instance.state;
@@ -126,7 +126,8 @@ function updateComponent(oldComponentVnode, newComponentVnode, parentContext, pa
     currentOwner.cur = oldComponentVnode._instance;
 
     let newVnode = oldComponentVnode._instance.render ? catchError(oldComponentVnode._instance, 'render', []) : new newComponentVnode.type(newProps, newContext);
-    newVnode = newVnode ? newVnode : new VnodeClass('#text', "", null, null);//用户有可能返回null，当返回null的时候使用一个空白dom代替
+    //用户有可能返回null，当返回null的时候使用一个空白dom代替
+    newVnode = newVnode ? newVnode : new VnodeClass('#text', "", null, null);
     const renderedType = typeNumber(newVnode);
     if (renderedType === 3 && renderedType === 4) {
         renderedVnode = new VnodeClass('#text', renderedVnode, null, null);
@@ -157,7 +158,7 @@ function updateComponent(oldComponentVnode, newComponentVnode, parentContext, pa
         if (oldComponentVnode._instance.componentDidUpdate) {
             catchError(oldComponentVnode._instance, 'componentDidUpdate', [oldProps, oldState, oldContext]);
         }
-        oldComponentVnode._instance.lifeCycle = Com.UPDATED
+        oldComponentVnode._instance.lifeCycle = CompStatus.UPDATED
     }
 
 }
@@ -400,7 +401,7 @@ function updateChild(oldChild, newChild, parentDomNode, parentContext) {
 
         } else if (newStartIndex > newEndIndex) {
             //如果新节点组先遍历完，那么代表旧节点组中剩余节点都不需要，所以直接删除
-            
+
             for (; oldStartIndex - 1 < oldEndIndex; oldStartIndex++) {
                 if (oldChild[oldStartIndex]) {
                     let removeNode = oldChild[oldStartIndex];
@@ -491,10 +492,10 @@ function mountComponent(Vnode, parentDomNode, parentContext) {
     if (instance.componentDidMount) {
         //Moutting变量用于标记组件是否正在挂载
         //如果正在挂载，则所有的setState全部都要合并
-        instance.lifeCycle = Com.MOUNTTING;
+        instance.lifeCycle = CompStatus.MOUNTTING;
         catchError(instance, 'componentDidMount', []);
         instance.componentDidMount = null;//防止用户调用
-        instance.lifeCycle = Com.MOUNT;
+        instance.lifeCycle = CompStatus.MOUNT;
     }
 
     if (instance.componentDidCatch) {
@@ -642,6 +643,7 @@ function renderByLuy(Vnode, container, isUpdate, parentContext, instance) {
  * @param {Element} container 这是一个真实DOM节点，用于插入虚拟DOM。
  */
 function render(Vnode, container) {
+
     if (typeNumber(container) !== 8) {
         throw new Error('Target container is not a DOM element.')
     }

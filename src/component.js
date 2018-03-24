@@ -4,7 +4,7 @@ import {Vnode} from './createElement'
 import {catchError} from './errorBoundary'
 
 //component状态编码
-const Com = {
+const CompStatus = {
     CREATE: 0,//创造节点
     MOUNT: 1,//节点已经挂载
     UPDATING: 2,//节点正在更新
@@ -28,7 +28,7 @@ class ReactClass {
 
         this.nextState = null;
         this._renderCallbacks = [];
-        this.lifeCycle = Com.CREATE;
+        this.lifeCycle = CompStatus.CREATE;
         this.stateMergeQueue = [];
         this._penddingState = [];
         this.refs = {};
@@ -117,22 +117,22 @@ class ReactClass {
             }
         }
 
-        if (this.lifeCycle === Com.CREATE) {
+        if (this.lifeCycle === CompStatus.CREATE) {
             //组件挂载期
 
         } else {
             //组件更新期
-            if (this.lifeCycle === Com.UPDATING) {
+            if (this.lifeCycle === CompStatus.UPDATING) {
                 return
             }
 
-            if (this.lifeCycle === Com.MOUNTTING) {
+            if (this.lifeCycle === CompStatus.MOUNTTING) {
                 //componentDidMount的时候调用setState
                 this.stateMergeQueue.push(1);
                 return
             }
 
-            if (this.lifeCycle === Com.CATCHING) {
+            if (this.lifeCycle === CompStatus.CATCHING) {
                 //componentDidMount的时候调用setState
                 this.stateMergeQueue.push(1);
                 return
@@ -186,7 +186,7 @@ class ReactClass {
 }
 
 export {
-    Com,
+    CompStatus,
     ReactClass,
 }
 

@@ -1,6 +1,6 @@
 import {disposeVnode} from './dispose';
 import {typeNumber, noop} from './utils';
-import {Com} from './component';
+import {CompStatus} from './component';
 
 var _errorVnode = [];
 var V_Instance = [];
@@ -114,7 +114,7 @@ function runException() {
         const {instance, componentDidCatch} = ins;
         if (componentDidCatch) {
             try {
-                instance.lifeCycle = Com.CATCHING;
+                instance.lifeCycle = CompStatus.CATCHING;
                 componentDidCatch.call(instance, globalError, errorMsg);
                 instance._updateInLifeCycle();
                 break;
