@@ -1,20 +1,59 @@
 var path = require('path');
 var webpack = require('webpack');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
     entry: [
-        './demo/index.js',
+        // './demo/index.js',
+        './project/datasheet/src/index.js',
     ],
 
     output: {
-        path: path.join(__dirname, 'public'),
-        // path: __dirname,
+        // path: path.join(__dirname, 'public'),
+        path: __dirname,
         filename: 'bundle.js',
     },
 
+    module:
+        {
+
+            rules: [
+                {
+                    test: /\.(js|jsx)$/,
+                    include: [
+                        __dirname,
+                        path.join(__dirname, 'src'),
+                        path.join(__dirname, 'demo'),
+                    ],
+                    use: {
+                        loader: 'babel-loader',
+                    },
+                },
+                {
+                    test: /\.s?css/,
+                    use: ExtractTextPlugin.extract({
+                        fallback: 'style-loader',
+                        use: ['css-loader', 'sass-loader'],
+                    }),
+                },
+                {
+                    test: /.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
+                    use: [{
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name].[ext]',
+                            outputPath: 'fonts/',    // where the fonts will go
+                            publicPath: '../'       // override the default path
+                        }
+                    }]
+                },
+            ],
+        },
+
     plugins:
         [
+            new ExtractTextPlugin("styles.css"),
             new webpack.LoaderOptionsPlugin({
                 debug: true
             }),
@@ -41,30 +80,12 @@ module.exports = {
     //     },
     // },
 
-    module:
-        {
-
-            rules: [{
-                test: /\.(js|jsx)$/,
-                include: [
-                    __dirname,
-                    path.join(__dirname, 'src'),
-                    path.join(__dirname, 'demo'),
-                ],
-                use: {
-                    loader: 'babel-loader',
-                },
-            }],
-
-
-        }
-    ,
 
     devtool: 'inline-source-map',
     devServer:
         {
             contentBase: path.join(__dirname, 'public'),
-            port: 8999,
+            port: 8900,
             hot: true,
             inline: true,
             publicPath: '/',

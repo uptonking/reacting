@@ -4,7 +4,7 @@ excel-like table experience out of the box
 ## target
 
 - table ui
-- excel operations
+- top 20% of most-used excel operations
 
 ## dev 
 ```sh
@@ -19,14 +19,24 @@ excel-like table experience out of the box
  npm run demo
 ```
 
-start from [http://localhost:8999](http://localhost:8999)
+start from [http://localhost:8900](http://localhost:8900)
 
 ## todo
 
-- [ ] `dtodo3` 计划  
-- [ ] todo2
+- pivotable
+- [ ] 左边和上边的行列指示数字居中  
+- [ ] fab  
+- [ ] 组件国际化  
+- [ ] 无限滚动
+  
+- ribbon menu
+- [ ] 折叠
 
-- [x] todo1
+- [ ] undo/redo
+
+## remind
+
+- undo与redo如何实现  
 
 ## License
 

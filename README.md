@@ -15,12 +15,7 @@ copied some code and ideas from [215566435/Luy](https://github.com/215566435/Luy
  npm install
  npm run build
 ```
-
 ## demo
-```sh
- npm run demo
-```
-
 start from [http://localhost:8999](http://localhost:8999)
 
 ## todo

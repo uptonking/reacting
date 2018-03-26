@@ -1,6 +1,5 @@
 // import React from 'react';
-import React from '../reacting';
-// import React from 'luy';
+import React from '../react';
 
 class PlotBoard extends React.Component {
 

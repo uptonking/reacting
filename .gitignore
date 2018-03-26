@@ -6,3 +6,5 @@ node_modules/
 build/
 public/bundle.js
 package-lock.json
+bundle.js
+styles.css
